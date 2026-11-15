@@ -1,0 +1,814 @@
+# The rule policy and severity philosophy:
+#   - error / warning: blocks the merge — bugs and correctness risks
+#   - info:            does not block — "ugly but works", clean up later
+# When uncertain whether a rule earns its keep: disable it rather than carry a baseline.
+
+style:
+  FunctionOnlyReturningConstant:
+    active: false
+  MaxLineLength:
+    active: false
+  MagicNumber:
+    active: false
+  ReturnCount:
+    active: false
+  ThrowsCount:
+    active: false
+  WildcardImport:
+    # 2056 findings repo-wide — `import foo.*` is the established style here. Kotlin's
+    # compiler resolves conflicts safely; not worth changing.
+    active: false
+  VarCouldBeVal:
+    # Reports `var` that is never reassigned. False-positive-heavy: misses
+    # `KMutableProperty1` references (`values::propertyName` in demo `configurable*`
+    # helpers) and reassignment via custom `field = …` getters. 254 noise findings
+    # across the repo with no actionable fixes; not worth a baseline.
+    active: false
+  UseCheckOrError:
+    # Reports `throw IllegalStateException(...)` and suggests `error(...)` / `check(cond) { ... }`.
+    # `error("x")` is sugar for `throw IllegalStateException("x")`; `check(cond)` is sugar for
+    # `if (!cond) throw IllegalStateException(...)`. Both forms are equally clear and behave
+    # identically. Pure idiom preference, no bug-finding value.
+    active: false
+  UseRequire:
+    # Reports `if (!cond) throw IllegalArgumentException(...)` and suggests
+    # `require(cond) { ... }`. Both forms are equally clear and behave identically;
+    # pure idiom preference, soft hint.
+    active: true
+    severity: warning
+  UseRequireNotNull:
+    # Reports `require(x != null)` and suggests `requireNotNull(x)`. Idiom preference,
+    # no bug-finding value.
+    active: true
+    severity: warning
+  ExplicitItLambdaMultipleParameters:
+    # Reports `it` in nested lambdas where multiple `it` would be in scope. The rule
+    # encourages explicit naming; useful as a hint but not a correctness check.
+    active: true
+    severity: warning
+  ForbiddenComment:
+    active: false
+  UseOrEmpty:
+    # Reports `?: emptyList()` and suggests `.orEmpty()`. Both forms are functionally
+    # identical and read equally clearly; pure idiom preference.
+    active: true
+    severity: warning
+  UnusedPrivateProperty:
+    active: true
+    severity: warning
+  UnusedPrivateClass:
+    # Reports private classes that are never referenced. False positives are
+    # common in test/demo code (enums referenced only in string assertions,
+    # `@Serializable` documentation stubs, fixtures used via reflection), so
+    # the rule is scoped to main source sets and runs as a non-blocking hint.
+    active: true
+    severity: warning
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  UnusedPrivateFunction:
+    # Reports private functions that are never called. Same false-positive
+    # profile as UnusedPrivateClass (test helpers kept for symmetry, demo
+    # scaffolding) — main-only, non-blocking.
+    active: true
+    severity: warning
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  UnusedParameter:
+    active: false
+  UnusedVariable:
+    # Reports `val x = …` that is never read. In practice the rule has poor signal-to-noise:
+    # named locals frequently document intent (named coroutines from `launch { … }`,
+    # named return values used as readable shorthand for assertions, named side-effect
+    # results from APIs whose value carries metadata). Forcing inlining trades clarity
+    # for compliance. IntelliJ inspections catch the rare genuinely-dead local during
+    # editing without applying repo-wide pressure.
+    active: false
+  ExplicitItLambdaParameter:
+    active: false
+  LoopWithTooManyJumpStatements:
+    active: false
+  ForbiddenMethodCall:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      # Generated source (e.g. buildSrc->module copies via from-buildSrc). The
+      # generic build-folder exclude in ProjectConfiguration.kt does not catch
+      # these because they live in a source set's srcDir. Fix the source, not
+      # the copy.
+      - '**/build/generated/**'
+    methods:
+      - "com.benasher44.uuid.uuid4"
+      - "react.router.react.useNavigate"
+      - "kotlinx.coroutines.flow.toList" #it is too dangerous to create very, very large lists when querying the database
+      - value: "kotlin.time.Clock.System.now"
+        reason: "Use it.neckar.open.time.now(), a test replaces it with VirtualNowProvider"
+      - value: "java.lang.System.currentTimeMillis"
+        reason: "Use it.neckar.open.time.nowMillis(), a test replaces it with VirtualNowProvider"
+    # `kotlin.io.println` / `kotlin.io.print` live in `neckar-rules.ForbiddenPrintCall` (separate
+    # rule so demo-module excludes apply only to println, not to Flow.toList et al.).
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      - "react.router.NavigateFunction"
+  MayBeConstant:
+    # Style-only: `val FOO = "x"` vs `const val FOO = "x"`. Real semantic difference
+    # only matters at the Java-interop boundary (where we don't expose these constants
+    # anyway). Not worth 18 baseline entries.
+    active: false
+  ObjectLiteralToLambda:
+    # Flags `object : SamInterface { override fun method() = … }` that can be rewritten
+    # as `SamInterface { … }`. Real modernisation hint when the SAM target is `fun interface`.
+    # Severity warning — visible in Code Quality, doesn't block the build.
+    active: true
+    severity: warning
+  UnnecessaryApply:
+    # Style-only: `.apply { … }` vs `.also { … }` vs separate statement. Idiom preference.
+    active: false
+  NewLineAtEndOfFile:
+    # Cosmetic only. The vast majority of editors auto-handle this; not worth blocking on.
+    active: false
+  AbstractClassCanBeConcreteClass:
+    # Style-only. Abstract classes with no abstract members may be intentional (sealed-like
+    # extension points, future expansion). Not worth 27 baseline entries.
+    active: false
+  AbstractClassCanBeInterface:
+    # Style-only. Sometimes abstract base classes are deliberately not interfaces (state, ctor).
+    active: false
+
+empty-blocks:
+  EmptyFunctionBlock:
+    # Reports empty function bodies. Most matches are intentional no-op overrides
+    # or default implementations; the rule does not catch bugs. Kept active as a
+    # hint to consider documenting the intent.
+    active: true
+    severity: warning
+  EmptyClassBlock:
+    # Reports `class Foo { }` / `object Bar {}` with an empty body. The rule produces
+    # only stylistic findings — empty blocks change nothing about behaviour and don't
+    # signal bugs or misleading code. Brace-style preferences belong in a formatter,
+    # not in a lint baseline.
+    active: false
+  EmptyDefaultConstructor:
+    active: false
+  EmptySecondaryConstructor:
+    active: false
+  EmptyInitBlock:
+    active: true
+
+complexity:
+  CyclomaticComplexMethod:
+    # 113 findings — many are intentionally long config/setup blocks (DSL builders,
+    # demo descriptors). Threshold tuning would need per-module overrides; not worth it.
+    active: false
+  LongMethod:
+    # 310 findings — same DSL-builder false-positive profile as CyclomaticComplexMethod.
+    active: false
+  NestedBlockDepth:
+    active: true
+    severity: warning
+  TooManyFunctions:
+    active: false
+  ComplexCondition:
+    active: true
+    severity: warning
+  LargeClass:
+    active: false
+  LongParameterList:
+    active: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    # Disabled: in Kotlin (no checked exceptions) the rule produced 304 baseline entries
+    # across the repo and never led to actual fixes — it just parked findings. Top-level
+    # safety nets (webhook routers, scheduler loops) must catch Exception by design,
+    # which the rule also flags. Catching Throwable/Error is the real bug; this rule
+    # also catches that, but it's so noisy on Exception that nobody acted on either.
+    active: false
+  TooGenericExceptionThrown:
+    # Production code names the failure: IllegalStateException / IllegalArgumentException /
+    # a domain exception, so a caller can tell the cases apart. Test and fixture code is
+    # excluded — there `throw RuntimeException("boom")` IS the subject under test (does the
+    # collector catch it, does the status page render it), and a specific type would only
+    # narrow what the test proves.
+    active: true
+    severity: warning
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  PrintStackTrace:
+    active: true
+  ObjectExtendsThrowable:
+    active: true
+  RethrowCaughtException:
+    active: true
+  ReturnFromFinally:
+    active: true
+  ThrowingExceptionFromFinally:
+    active: true
+  ThrowingNewInstanceOfSameException:
+    active: true
+
+naming:
+  MatchingDeclarationName:
+    # Reports files where the file name doesn't match a single top-level class. False-positive
+    # heavy in MPP code (expect/actual splits), file-per-extension-group convention, and
+    # generated-file mirrors. Not worth 30 baseline entries.
+    active: false
+  FunctionNaming:
+    # 86 baseline findings across composables, factories, mock generators, and `@Test`
+    # methods that intentionally use PascalCase or backtick names. Pattern enforcement
+    # produces noise without catching real naming bugs.
+    active: false
+  ClassNaming:
+    # Style-only. Pattern enforcement on class names rarely surfaces bugs; the few legitimate
+    # cases (e.g. enum-disguised-as-class) are caught by IntelliJ inspections at edit time.
+    active: false
+
+  NoNameShadowing:
+    active: true
+    severity: warning
+  MemberNameEqualsClassName:
+    active: false
+  VariableNaming:
+    active: false
+  ObjectPropertyNaming:
+    # Constants in PascalCase (MaxSlots), a leading acronym in lower case (cssClassPage, xdgConfigHome);
+    # the alternatives below are the acronym list (rule: ai/guides/code-style.md). serialVersionUID is the name Java serialization reads.
+    active: true
+    constantPattern: &constantName "(?!(?:Https|Bson|Hmac|Html|Http|Ipv6|Jpeg|Json|Jwks|Oidc|Otel|Otlp|Pk12|Pnpm|Smtp|Uuid|X509|Yaml|Api|Awt|Cad|Cdn|Cli|Csi|Css|Csv|Dns|E2e|Eof|Esc|Fnv|Ibm|Jdk|Jmh|Jvm|Jws|Jwt|Ksp|Lfs|Mcp|Npm|Nvm|Ote|Pdf|Png|Rsa|Sdk|Sha|Shm|Sql|Sse|Ssh|Svg|Tcp|Tls|Ttl|Udp|Url|Utf|Wav|Vat|Xdg|Xml|Ai|Ci|Db|Ff|Fx|Gc|Id|Ip|Js|Mm|Mr|Pv|S3|Ts|Ui|Us|Wl)(?:[A-Z0-9]|$))[A-Z][A-Za-z0-9]*|(?:https|bson|hmac|html|http|ipv6|jpeg|json|jwks|oidc|otel|otlp|pk12|pnpm|smtp|uuid|x509|yaml|api|awt|cad|cdn|cli|csi|css|csv|dns|e2e|eof|esc|fnv|ibm|jdk|jmh|jvm|jws|jwt|ksp|lfs|mcp|npm|nvm|ote|pdf|png|rsa|sdk|sha|shm|sql|sse|ssh|svg|tcp|tls|ttl|udp|url|utf|wav|vat|xdg|xml|ai|ci|db|ff|fx|gc|id|ip|js|mm|mr|pv|s3|ts|ui|us|wl)(?:[A-Z0-9][A-Za-z0-9]*)?|serialVersionUID"
+    propertyPattern: "[A-Za-z0-9_]*"
+    privatePropertyPattern: "[A-Za-z0-9_]*"
+  EnumNaming:
+    enumEntryPattern: "[A-Za-z0-9_]*"
+  TopLevelPropertyNaming:
+    constantPattern: *constantName
+    propertyPattern: "[A-Za-z0-9_]*"
+    privatePropertyPattern: "[A-Za-z0-9_]*"
+  ConstructorParameterNaming:
+    active: false
+  PackageNaming:
+    active: true
+    packagePattern: "[a-z0-9]+(\\.[a-z][A-Za-z0-9]*)*"
+  InvalidPackageDeclaration:
+    # Style-only: package statement doesn't match directory path. Most matches are
+    # historical (modules moved without package rename); IntelliJ handles drift on
+    # next refactor. Not worth 69 baseline entries.
+    active: false
+
+performance:
+  SpreadOperator:
+    active: true
+    severity: warning
+
+coroutines:
+  InjectDispatcher:
+    active: true
+    severity: warning
+  GlobalCoroutineUsage:
+    active: true
+    excludes: [ '**com/cedarsoft/charting/demo/descriptors/**',
+                '**com/meistercharts/demo/descriptors/**' ]
+  SleepInsteadOfDelay:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
+  SuspendFunSwallowedCancellation:
+    active: true
+
+potential-bugs:
+  UnnecessaryNotNullOperator:
+    # Flags redundant `!!` on a non-nullable type. Hint to clean up — `!!` on a non-null
+    # type is dead noise that misleads readers. Severity warning — visible in Code Quality,
+    # doesn't block the build.
+    active: true
+    severity: warning
+  UnnecessarySafeCall:
+    # False positives common with platform types. Style-level cleanup with no bug value.
+    active: false
+  IgnoredReturnValue:
+    # Disabled: superseded by Kotlin compiler's `-Xreturn-value-checker=full` with
+    # `-Xwarning-level=RETURN_VALUE_NOT_USED:error` (see buildSrc/src/main/kotlin/KotlinSettings.kt).
+    # The compiler check is stricter and covers all calls, not just @CheckReturnValue-annotated ones.
+    active: false
+  AvoidReferentialEquality:
+    active: true
+  CastToNullableType:
+    active: true
+  DontDowncastCollectionTypes:
+    active: true
+  DoubleMutabilityForCollection:
+    active: true
+  MapGetWithNotNullAssertionOperator:
+    active: true
+  NullableToStringCall:
+    # ~95% of matches are inside log/error messages (`${cause.message}`,
+    # `${kClass.simpleName}`, `${qualifiedName?.asString()}`) where the string
+    # `"null"` is exactly the right output. The rule cannot distinguish
+    # log/diagnostic context from user-visible output.
+    active: false
+  NullCheckOnMutableProperty:
+    active: true
+  UnconditionalJumpStatementInLoop:
+    active: true
+
+neckar-rules:
+  active: true
+  AccessReturnsNoCollection:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/internal/attic/**'
+  AccessTakesItsCollection:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/internal/attic/**'
+  BareMoneyOutsidePricePackages:
+    # A price package names the tax basis of every amount (`Money.Net`, `Money.Gross`, `Money.Vat`,
+    # `Money.WithVat`); the bare `Money` stays for amounts without one (loan, subsidy, earnings).
+    active: true
+    pricePackages:
+      - 'it.neckar.financial.priced'
+      - 'it.neckar.financial.quote'
+      - 'it.neckar.price'
+      - 'it.neckar.catalog'
+      - 'it.neckar.elektromeister.catalog'
+      - 'it.neckar.elektromeister.electro.quote'
+      - 'it.neckar.elektromeister.pv.quote'
+      - 'it.neckar.elektromeister.pv.projectconfiguration.quotesnapshot'
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  UntypedValueSafeCast:
+    # `as?` on a value read from untyped data (JsonElement, BsonValue, org.bson.Document.get, Map<String, Any?>,
+    # YamlNode, dynamic) answers null for a wrong type exactly as for an absent key. The cast is followed by
+    # `?: throw` or `?: error(…)` naming the path, the expected and the found type, or carries
+    # @Suppress("UntypedValueSafeCast") with the reason. Tests assert the type they expect; attic is
+    # hands-off; the sandbox holds throwaway experiments.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/internal/sandbox/**'
+      - '**/internal/attic/**'
+  OverrideMustRepeatContractAnnotation:
+    # An override must repeat every contract annotation (`@UiThread`, `@NonUiThread`, `@Blocking`,
+    # `@NonBlocking` — meta-annotated `@ThreadDescribingAnnotation`; `@Hot` — meta-annotated
+    # `@AllocationDescribingAnnotation`) of the declaration it overrides. Method annotations are not
+    # inherited, so the contract is otherwise silently lost at the implementation — exactly where a
+    # reader looks.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  HotFunctionMustNotAllocateCapturingLambda:
+    # A capturing lambda that becomes a real instance (non-inline callee, noinline parameter,
+    # fun-interface SAM conversion, assignment) allocates per evaluation. Non-capturing lambdas
+    # are compiler singletons and stay exempt; captures passed to inline function-type parameters
+    # are compiled away. Acknowledge deliberate instances with `@HotAllocation("reason")`.
+    # Fires only inside `@Hot`-annotated bodies.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  HotFunctionMustNotBoxValueClass:
+    # A `@Hot` method must not box a value class. Reading a value class through a generic position
+    # (`provider.valueAt(i)`, `list[i]`, generic `getValue(): T`) boxes it at the erased boundary —
+    # a per-frame allocation in the hot path. Deliberate allocations are acknowledged at the call
+    # site with `@HotAllocation("reason")`. Fires only inside `@Hot`-annotated bodies.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  HotFunctionMustOnlyCallHotFunctions:
+    # Function coloring for `@Hot`: a `@Hot` method may only call `@Hot` methods (plus `inline` /
+    # stdlib / JDK neutrals). Propagates the hot-path allocation contract transitively along the
+    # call chain, like `suspend`. `@Slow` / `@Allocates` are explicit anti-hot markers:
+    # calling such a function or reading such a property from a `@Hot` body is always flagged,
+    # before any neutral exemption. Deliberate allocations are acknowledged at the call site with
+    # `@HotAllocation("reason")`; polymorphic delegation points over deliberately un-colored
+    # interfaces (e.g. Layer.paint) with `@HotBoundary("reason")` — the latter never silences
+    # the `@Slow`/`@Allocates` deny. Fires only inside `@Hot`-annotated bodies.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  DataViewMustNotReferenceDomain:
+    # Layer-separation rule (covers RestDtoMustNotEmbedDomain from #1773 and DataView→Domain from
+    # #1762). REST/DataView classes must not embed Domain types — convert via top-level
+    # `toDetails`/`toPreview`/`toTableEntry`/`toDomain` extension functions.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge`. These are GitLab-integration
+    # services without a Domain/DataView layer split — webhook payloads are `@Serializable` wire
+    # types, REST responses embed in-memory model types directly, and gitlab4j-api's `MergeRequest`
+    # SDK type triggers the naming-based DataView heuristic. No real layer violation to find here.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  DataViewMustNotReferenceEntity:
+    # Layer-separation rule. REST/DataView must not reference Mongo entities; convert through
+    # Domain (toModel → toDetails). No conversion-extension exemption — Entity↔DataView is
+    # never a legitimate direct conversion.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Domain/DataView/Entity layer
+    # split; see `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  DomainMustNotBeSerializable:
+    # Domain classes never carry @Serializable. Domain lives in-memory; serialization always
+    # crosses to Entity, REST, event, or cache counterparts. Catches the architectural smell at
+    # build time and unlocks the broad scope of SerializableMustUseNativeInstant/Uuid below.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — webhook payloads and aggregate
+    # snapshots are wire types by design; see `DataViewMustNotReferenceDomain` for the rationale.
+    # `build-logic/build-report-schema` is the wire format of `build-reports/build-result.json` itself,
+    # written by the build and read by a service — it has no Domain counterpart to convert to.
+    # `build-logic/test-data-description` is the file format of the descriptions under `test-data/`, with no Domain counterpart either.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+      - '**/build-logic/build-report-schema/**'
+      - '**/build-logic/test-data-description/**'
+  DomainMustNotReferenceDataView:
+    # Layer-separation rule. Domain must not reference REST/DataView; convert via top-level
+    # `toDetails`/`toPreview`/`toTableEntry` extension functions.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Domain/DataView layer split;
+    # see `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  DomainMustNotReferenceEntity:
+    # Layer-separation rule. Domain must not reference Mongo entities (subtypes of MongoDocument);
+    # convert via top-level `toModel`/`toEntity` extension functions in the data layer.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Mongo entities, no layer split;
+    # see `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  EntityMustNotReferenceDataView:
+    # Layer-separation rule. Mongo entities must not reference REST/DataView; convert through
+    # Domain (toModel → toDetails). No conversion-extension exemption.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Mongo entities, no layer split;
+    # see `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  EntityMustNotReferenceDomain:
+    # Layer-separation rule. Mongo entities must not reference Domain inside the class body;
+    # conversion belongs in top-level `toModel`/`toEntity` extension functions.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Mongo entities, no layer split;
+    # see `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  ForbiddenPackageDependency:
+    # Forbids one package from depending on another. The rule itself carries no product knowledge —
+    # what is forbidden is stated per project, in a detekt configuration layered on top of this one
+    #
+    # Active repo-wide but a no-op here: without `forbidden` entries it reports nothing. A product
+    # that wants an architectural boundary adds its own config file and lists the pairs; nothing
+    # needs to change in this file.
+    #
+    # It resolves the referenced type via the K2 Analysis API, so a fully-qualified inline reference
+    # is flagged as well, not only an import.
+    active: true
+    forbidden: []
+    exemptFiles: []
+  ForbiddenDesktopInTest:
+    # A test runs unattended; main code of a desktop application may open a file for its user.
+    active: true
+    severity: error
+    includes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  TempDirectoryOnlyViaJUnit:
+    # A temporary file created by hand outlives the test; JUnit `@TempDir` deletes it.
+    active: true
+    severity: error
+    includes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  RealTimeDelayInTest:
+    # A fixed wait in a test is too short on a loaded runner and too long everywhere else.
+    # attic is hands-off.
+    active: true
+    severity: error
+    includes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+    excludes:
+      - '**/internal/attic/**'
+  ForbiddenPrintCall:
+    # Flags `kotlin.io.println` / `kotlin.io.print`. Lives here (instead of style.ForbiddenMethodCall)
+    # so demo-module excludes apply only to println — `Flow.toList` and the other entries in
+    # ForbiddenMethodCall must stay flagged in demos. Resolves calls via the K2 Analysis API
+    # against the `kotlin.io.*` FQN, so user-defined `println` functions are not mis-flagged.
+    #
+    # Test sources are analysed too: a test run prints test results and nothing else.
+    active: true
+    severity: warning
+    excludes:
+      # Prints the paths of the example files it writes for manual inspection.
+      - '**/pdfExamplesTest/**'
+      # Its result is the console output.
+      - '**/CaffeineCacheBenchmarkTest.kt'
+      # Demo runners and CLI tools that use println as their primary output. Covers
+      # `**/demo/**` packages anywhere plus individual modules whose names don't carry
+      # a demo segment in the package path (cert-diagnostics ships as a CLI download).
+      - '**/demo/**'
+      - '**/cert/diagnostics/**'
+      - '**/meistercharts-demos-fx/**'
+      # Generated source (e.g. buildSrc->module copies via from-buildSrc).
+      - '**/build/generated/**'
+  WireNameRequiresMarker:
+    # Asks for the marker a wire-sounding name promises: a serializable `*Details` / `*Response` /
+    # `*Payload` / `*Event` / `*Message` class must carry `@DataView`, `@Messaging`, a Mongo
+    # supertype, or live in a `rest` / `mongo` / `messaging` package. The name is a question now,
+    # not an answer (ADL 0179) — it used to take classes out of the layer rules without a decision.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  MessagingMustNotReferenceDomain:
+    # Layer-separation rule. Messaging wire types (a `messaging` package, or a `@Messaging` marker) must
+    # not embed Domain types — the message carries its own fields or a REST view. A `*Details` view
+    # stays allowed: projecting is the point.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Domain layer split; see
+    # `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  MessagingMustNotReferenceEntity:
+    # Layer-separation rule. Messaging wire types must not reference Mongo entities; convert through
+    # Domain (toModel → message). No conversion-extension exemption — Entity↔message is never a
+    # legitimate direct conversion.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — no Mongo entities, no layer split;
+    # see `DataViewMustNotReferenceDomain` for the rationale.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
+  MissingClientSessionRule:
+    active: true
+  GitLabAccessThroughClient:
+    # Covers test sources too: a test reaches GitLab through `GitLabClient` like production code.
+    active: true
+    excludes:
+      - '**/build/generated/**'
+  GitLabApiViaFactory:
+    # A test builds a `GitLabApi` as a stub holder or against a server the test starts itself.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  MonotonicTimeSourceViaProvider:
+    # Covers test sources too: a test that measures with `TimeSource.Monotonic` cannot run on virtual time.
+    active: true
+    excludes:
+      - '**/build/generated/**'
+  OpenApiEntityViewPlacement:
+    # The only enforcement of `@OpenApiEntityView` on every `<Entity>DataView`; contract in the rule's KDoc.
+    active: true
+    excludes:
+      - '**/build/generated/**'
+  PolymorphicSerializationCallRequiresExplicitType:
+    # Calls to reified-T serialization entry points (`call.respond`, `call.receive`, Ktor client
+    # `setBody`/`body`, `Json.encodeToString`/`decodeFromString`, …) must carry `<T>` explicitly.
+    # The reified type parameter is the only input kotlinx-serialization uses to pick the
+    # (de)serializer; inferred `T` shifts silently on refactor (rename, inline, smart-cast) and
+    # may pick a leaf subtype, dropping the polymorphic `type` discriminator on the wire.
+    #
+    # Watched callable IDs live in PolymorphicSerializationCallRequiresExplicitType.WATCHED.
+    #
+    # Companion rules: `RespondWithSealedSubclass`, `RestResponseConstructorMustUseFactory`,
+    # `WhenInitializerRequiresExplicitType`. See `internal/patterns/docs/kotlin/rest-response.md`.
+    #
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  RawCorsInstall:
+    # The one install(CORS) is installProductCors in it.neckar.ktor; every service configures CORS through it.
+    active: true
+    severity: error
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  RepositoryReadInTest:
+    # A test reads its classpath; a file of another module arrives through a SharedFiles configuration.
+    active: true
+    severity: error
+    includes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  RequireCheckWithoutMessage:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  RespondWithSealedSubclass:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  RestResponseConstructorMustUseFactory:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  SerializableMustUseNativeInstant:
+    # @Serializable classes must use NativeInstant instead of raw kotlin.time.Instant /
+    # kotlinx.datetime.Instant. Both raw forms serialize to ISO strings in BSON (no native
+    # DATE_TIME, no range queries) and force frontend parsing on the JSON wire.
+    #
+    # `build-logic/build-report-schema` is excluded: it is compiled by the Gradle-embedded Kotlin
+    # too, where `it.neckar.open` does not exist, and its instants only ever reach a JSON file.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/build-logic/build-report-schema/**'
+  SerializableMustUseNativeUuid:
+    # @Serializable classes must use NativeUuid instead of raw kotlin.uuid.Uuid. Raw Uuid
+    # serializes to a string in BSON (instead of native BinData(UUID)) and strips the type from
+    # the JSON wire contract.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  Status4xxIsAProtocolError:
+    # Test sources assert over a response they received and name foreign statuses.
+    active: true
+    severity: error
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  TenantDocumentsOnlyThroughTenantScopedCollection:
+    # A test that reads the documents of every tenant carries @AllTenants like production code.
+    active: true
+  ThrowWithoutMessage:
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+  UnknownKeysOnlyFromForeignSender:
+    # `strictMode = false` (kaml) and `ignoreUnknownKeys = true` (JSON) need `@ForeignFormat(sender = "…")` or an
+    # entry in the rule's `OwnFormatAllowlist`: a format this repository defines parses strictly.
+    # `warning` while existing decoders of foreign formats still lack `@ForeignFormat`.
+    active: true
+    severity: warning
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+  WhenInitializerRequiresExplicitType:
+    # `val x = when (...) { ... }` without explicit type lets the compiler silently infer a subtype
+    # on refactor — the polymorphic `type` discriminator vanishes from `call.respond` payloads
+    # without any compile error. Primitives (`String`/`Int`/`Long`/`Boolean`/`Double`/`Float`/
+    # `Short`/`Byte`/`Char`), `Nothing` (every branch throws) and type-parameter types are
+    # exempt — inference there is unambiguous or the annotation would add nothing.
+    #
+    # See `internal/patterns/docs/kotlin/rest-response.md`.
+    #
+    # Excluded modules: `gitlab-companion`, `gitlab-auto-merge` — same rationale as the other
+    # `neckar-rules` (no Domain/DataView/Entity layer split, no sealed-response discipline).
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
+      - '**/gitlab-companion/**'
+      - '**/gitlab-auto-merge/**'
