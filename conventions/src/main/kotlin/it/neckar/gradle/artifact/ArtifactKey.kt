@@ -7,10 +7,10 @@ import kotlin.jvm.JvmInline
  * The hash stays unshortened: a shortened one would let two different input sets share a key.
  */
 @JvmInline
-value class ArtifactKey(val value: String) {
-  init {
-    require(Pattern.matches(value)) { "Artifact key must match ${Pattern.pattern}: <$value>" }
-  }
+value class ArtifactKey(val sha256: Sha256) {
+  /** `in-<sha256>`, the form in the lock file, the fat jar and the image tag. */
+  val value: String
+    get() = Prefix + sha256.value
 
   override fun toString(): String {
     return value
@@ -19,7 +19,13 @@ value class ArtifactKey(val value: String) {
   companion object {
     const val Prefix: String = "in-"
 
-    val Pattern: Regex = Regex("^$Prefix" + Sha256HexPattern.pattern.removePrefix("^"))
+    val Pattern: Regex = Regex("^$Prefix" + Sha256.Pattern.pattern.removePrefix("^"))
+
+    /** The key [text] spells as `in-<sha256>`. */
+    fun parse(text: String): ArtifactKey {
+      require(Pattern.matches(text)) { "Artifact key must match ${Pattern.pattern}: <$text>" }
+      return ArtifactKey(Sha256(text.removePrefix(Prefix)))
+    }
 
     /** The fat jar entry holding the key; `VersionInformation` reads it at runtime. */
     const val ResourcePath: String = "META-INF/app-artifact-key.properties"

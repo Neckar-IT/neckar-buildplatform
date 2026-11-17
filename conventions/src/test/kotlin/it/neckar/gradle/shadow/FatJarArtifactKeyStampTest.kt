@@ -43,7 +43,7 @@ class FatJarArtifactKeyStampTest {
   @Test
   fun `a second stamp replaces the first`() {
     val jar = packedJar("restamped.jar")
-    FatJarArtifactKeyStamp.write(jar, ArtifactKey("in-" + "1".repeat(64)))
+    FatJarArtifactKeyStamp.write(jar, ArtifactKey.parse("in-" + "1".repeat(64)))
 
     FatJarArtifactKeyStamp.write(jar, Key)
 
@@ -75,6 +75,6 @@ class FatJarArtifactKeyStampTest {
   }
 
   private companion object {
-    val Key: ArtifactKey = ArtifactKey("in-3668efd5ddda0006ec4e4a1b2c3d4e5f3668efd5ddda0006ec4e4a1b2c3d4e5f")
+    val Key: ArtifactKey = ArtifactKey.parse("in-3668efd5ddda0006ec4e4a1b2c3d4e5f3668efd5ddda0006ec4e4a1b2c3d4e5f")
   }
 }

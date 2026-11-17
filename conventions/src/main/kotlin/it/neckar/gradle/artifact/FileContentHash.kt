@@ -8,13 +8,9 @@ import kotlin.jvm.JvmInline
  * checkout with and without LFS smudge produces the same key of a bake image. A file read by [ofOwnBytes] counts with its own bytes.
  */
 @JvmInline
-value class FileContentHash(val value: String) {
-  init {
-    require(Sha256HexPattern.matches(value)) { "File content hash must be 64 lowercase hex digits: <$value>" }
-  }
-
+value class FileContentHash(val sha256: Sha256) {
   override fun toString(): String {
-    return value
+    return sha256.value
   }
 
   companion object {
@@ -27,14 +23,14 @@ value class FileContentHash(val value: String) {
 
     /** The hash of the bytes in [stream], read in blocks: a Git-LFS pointer counts as itself, as in an artifact a build assembled. */
     fun ofOwnBytes(stream: InputStream): FileContentHash {
-      return FileContentHash(sha256Hex(stream))
+      return FileContentHash(Sha256.of(stream))
     }
 
     fun of(content: ByteArray): FileContentHash {
-      return FileContentHash(lfsPointerOidOrNull(content) ?: sha256Hex(content))
+      return FileContentHash(lfsPointerOidOrNull(content) ?: Sha256.of(content))
     }
 
-    private fun lfsPointerOidOrNull(content: ByteArray): String? {
+    private fun lfsPointerOidOrNull(content: ByteArray): Sha256? {
       if (content.size > MaxLfsPointerSize) {
         return null
       }
@@ -42,7 +38,7 @@ value class FileContentHash(val value: String) {
       if (text.startsWith("$LfsPointerFirstLine\n").not()) {
         return null
       }
-      return LfsOidLine.find(text)?.groupValues?.get(1)
+      return LfsOidLine.find(text)?.groupValues?.get(1)?.let { Sha256(it) }
         ?: throw IllegalArgumentException("Git-LFS pointer without an <oid sha256:> line: <$text>")
     }
   }

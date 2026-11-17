@@ -23,6 +23,6 @@ object ArtifactKeyReport {
   }
 
   fun readKey(directory: File): ArtifactKey {
-    return ArtifactKey(directory.resolve(KeyFileName).readText().trim())
+    return ArtifactKey.parse(directory.resolve(KeyFileName).readText().trim())
   }
 }

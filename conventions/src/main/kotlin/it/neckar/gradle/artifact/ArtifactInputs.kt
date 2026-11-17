@@ -8,7 +8,7 @@ data class ArtifactInputs(val inputs: List<ArtifactInput>) {
   /** One line per input; the encoding is ours, so no library update moves a key. */
   val serialization: String = inputs.joinToString(separator = "") { it.toLine() + "\n" }
 
-  val key: ArtifactKey = ArtifactKey(ArtifactKey.Prefix + sha256Hex(serialization.toByteArray(Charsets.UTF_8)))
+  val key: ArtifactKey = ArtifactKey(Sha256.of(serialization))
 
   companion object {
     /** The inputs [serialization] holds, the text [ArtifactKeyReport] writes. */
@@ -72,9 +72,9 @@ sealed interface ArtifactInput {
     fun parse(line: String): ArtifactInput {
       return when {
         line.startsWith(SettingPrefix) -> line.removePrefix(SettingPrefix).let { Setting(it.substringBefore('='), it.substringAfter('=')) }
-        line.startsWith(ReferencePrefix) -> line.removePrefix(ReferencePrefix).let { Reference(it.substringBefore('='), ArtifactKey(it.substringAfter('='))) }
+        line.startsWith(ReferencePrefix) -> line.removePrefix(ReferencePrefix).let { Reference(it.substringBefore('='), ArtifactKey.parse(it.substringAfter('='))) }
         line.startsWith(DirectoryPrefix) -> Directory(line.removePrefix(DirectoryPrefix))
-        line.startsWith(FilePrefix) -> line.removePrefix(FilePrefix).let { File(it.substringBeforeLast('='), FileContentHash(it.substringAfterLast('='))) }
+        line.startsWith(FilePrefix) -> line.removePrefix(FilePrefix).let { File(it.substringBeforeLast('='), FileContentHash(Sha256(it.substringAfterLast('=')))) }
         else -> throw IllegalArgumentException("Unknown artifact input line: <$line>")
       }
     }

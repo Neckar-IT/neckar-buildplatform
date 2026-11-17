@@ -9,7 +9,7 @@ import java.util.HexFormat
 class FileContentHashTest {
   @Test
   fun `a regular file hashes to its SHA-256`() {
-    assertThat(FileContentHash.of("hello\n".toByteArray()).value)
+    assertThat(FileContentHash.of("hello\n".toByteArray()).sha256.value)
       .isEqualTo("5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03")
   }
 
@@ -37,6 +37,6 @@ class FileContentHashTest {
   fun `text that only mentions LFS is hashed as a regular file`() {
     val text = "see\nversion https://git-lfs.github.com/spec/v1\noid sha256:${"a".repeat(64)}\nsize 1\n".toByteArray()
 
-    assertThat(FileContentHash.of(text).value).isEqualTo(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text)))
+    assertThat(FileContentHash.of(text).sha256.value).isEqualTo(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text)))
   }
 }

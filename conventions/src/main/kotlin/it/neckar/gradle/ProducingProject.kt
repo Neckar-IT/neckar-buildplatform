@@ -16,14 +16,27 @@ val Project.mavenModule: String
 /** The group of every artifact of the included build `build-logic`, published to the private package registry of the monorepo alone. */
 const val BuildLogicGroup: String = "it.neckar.build-logic"
 
+/** The group below which the module `internal/infrastructure/thirdparty` publishes the assets of GitHub releases to the Package Registry. */
+const val ThirdPartyGroup: String = "it.neckar.thirdparty"
+
 /**
  * The groups of the included builds `build-logic`, `internal/buildplatform`, `internal/open/project-registry` and
  * `internal/open/meistercharts/project-registry`: Gradle substitutes their projects itself.
  */
 private val IncludedBuildGroups: Set<String> = setOf(BuildLogicGroup, "it.neckar.buildplatform", "it.neckar.open.project-registry", "it.neckar.open.meistercharts.project-registry")
 
-/** True for a group the root build resolves to one of its projects: `it.neckar` or below, outside the [IncludedBuildGroups]. */
-fun isProducedByRootBuild(group: String): Boolean = MavenCoordinate.isNeckarGroup(group) && group !in IncludedBuildGroups
+/** True for a group the root build resolves to one of its projects: `it.neckar` or below, outside the [IncludedBuildGroups] and [isThirdPartyGroup]. */
+fun isProducedByRootBuild(group: String): Boolean {
+  return when {
+    MavenCoordinate.isNeckarGroup(group).not() -> false
+    group in IncludedBuildGroups -> false
+    isThirdPartyGroup(group) -> false
+    else -> true
+  }
+}
+
+/** True for [ThirdPartyGroup] and below, whose assets the Package Registry alone holds. */
+private fun isThirdPartyGroup(group: String): Boolean = MavenCoordinate.isGroupAtOrBelow(group, ThirdPartyGroup)
 
 /**
  * The project of this build producing [coordinate]; null for a coordinate that resolves from a repository, a third-party one and an

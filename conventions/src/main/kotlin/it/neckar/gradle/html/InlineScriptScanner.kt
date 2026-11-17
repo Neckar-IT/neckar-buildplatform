@@ -23,8 +23,8 @@ internal object InlineScriptScanner {
   private const val CommentStart: String = "<!--"
   private const val CommentEnd: String = "-->"
 
-  /** The `type` values whose content the browser runs, and which `script-src` therefore governs. */
-  private val ExecutedScriptTypes: Set<String> = setOf("", "module", "importmap", "speculationrules")
+  /** The `type` values besides the classic ones ([isClassicScriptType]) whose content the browser runs, and which `script-src` therefore governs. */
+  private val ExecutedScriptTypes: Set<String> = setOf("module", "importmap", "speculationrules")
 
   /** The character references a policy in an attribute value can carry, matched in one pass so a decoded `&` forms no second reference. */
   private val CharacterReference: Regex = Regex("""&(#[xX][0-9a-fA-F]+|#[0-9]+|apos|quot|amp);""")
@@ -78,11 +78,24 @@ internal object InlineScriptScanner {
           val closingTag = ClosingTag.find(text, bodyStart)
           val body = text.substring(bodyStart, closingTag?.range?.first ?: text.length)
 
-          if (carriesCode(openingTag.groupValues[1], body)) {
-            inlineScripts += InlineScript(lineNumber = text.lineNumberAt(openingTag.range.first), offset = DocumentOffset(openingTag.range.first), body = body)
+          val end = closingTag?.range?.last?.plus(1) ?: text.length
+
+          val attributes: Map<String, String> = attributesOf(openingTag.groupValues[1])
+          val type = attributes["type"].orEmpty().trim().lowercase()
+
+          if (carriesCode(attributes, type, body)) {
+            inlineScripts += InlineScript(
+              lineNumber = text.lineNumberAt(openingTag.range.first),
+              offset = DocumentOffset(openingTag.range.first),
+              body = body,
+              openingTagAttributes = openingTag.groupValues[1],
+              type = type,
+              attributeNames = attributes.keys,
+              end = DocumentOffset(end),
+            )
           }
 
-          index = closingTag?.range?.last?.plus(1) ?: text.length
+          index = end
         }
       }
     }
@@ -91,14 +104,11 @@ internal object InlineScriptScanner {
   }
 
   /** True when the element holds script the browser is meant to run and `script-src` blocks. */
-  private fun carriesCode(openingTagAttributes: String, body: String): Boolean {
+  private fun carriesCode(attributes: Map<String, String>, type: String, body: String): Boolean {
     if (body.isBlank()) return false
-
-    val attributes: Map<String, String> = attributesOf(openingTagAttributes)
     if (attributes.containsKey("src")) return false
 
-    val type = attributes["type"].orEmpty().trim().lowercase()
-    return type in ExecutedScriptTypes || type.contains("javascript") || type.contains("ecmascript")
+    return type in ExecutedScriptTypes || isClassicScriptType(type)
   }
 
   private fun documentPolicyOf(metaTagAttributes: String, offset: DocumentOffset): DocumentPolicy? {
