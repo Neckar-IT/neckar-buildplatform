@@ -10,6 +10,9 @@ org-jetbrains-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.
 
 com-diffplug-spotless = { id = "com.diffplug.spotless", version = "8.11.0" }
 
+# Applied by build-logic alone, which checks its Serializable classes; every other module gets Detekt through build-logic/core.
+dev-detekt = { id = "dev.detekt", version.ref = "dev-detekt" }
+
 com-vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "com-vanniktech-maven-publish" }
 
 edu-sc-seis-launch4j = { id = "edu.sc.seis.launch4j", version = "4.0.0" }
