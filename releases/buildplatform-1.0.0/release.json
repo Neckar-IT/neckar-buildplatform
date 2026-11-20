@@ -1,0 +1,13 @@
+{
+  "product": "buildplatform",
+  "version": "1.0.0",
+  "releasedOn": "2026-11-11",
+  "triggeredBy": {
+    "type": "Decision",
+    "by": "Agent"
+  },
+  "targets": [
+    "maven-central"
+  ],
+  "predecessor": null
+}
