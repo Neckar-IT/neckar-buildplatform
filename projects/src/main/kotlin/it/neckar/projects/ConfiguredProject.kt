@@ -22,13 +22,13 @@ open class ConfiguredProject protected constructor(
    */
   val targets: Set<KotlinTarget> = emptySet(),
   val inclusion: BuildInclusion = BuildInclusion.Always,
-) {
-
   /**
    * The full Gradle path: `OpenProjects` lies below `:internal:open` in the monorepo and below `:` in
-   * a build rooted at `internal/open`.
+   * a build rooted at `internal/open`. A registry passes it for a project outside [parent]: the export of
+   * `internal/open/meistercharts` registers `MeisterchartsProjects` at `:`, below `OpenProjects` at `:internal:open`.
    */
-  val path: GradleProjectPath = parent?.path?.resolve(relativePath) ?: relativePath
+  val path: GradleProjectPath = parent?.path?.resolve(relativePath) ?: relativePath,
+) {
 
   private val registeredSubprojects: MutableList<ConfiguredProject> = mutableListOf()
 

@@ -85,8 +85,9 @@ private fun Project.configurePnpmToolchain() {
     nodeExtension.pnpmVersion = npmVersion("pnpm")
   }
 
+  val cleanPaths = NodeToolchainLayout.cleanPaths(GradleProjectPath(path))
   tasks.named<Delete>("clean") {
-    delete("dist", "build", "node_modules", ".astro", ".gradle")
+    delete(cleanPaths)
   }
 
   tasks.register("printPnpmVersion") {

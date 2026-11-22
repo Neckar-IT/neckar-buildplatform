@@ -26,3 +26,13 @@ include("generated-file-marker")
 include("ksp-contract")
 // The convention plugins without operational knowledge.
 include("conventions")
+
+// The registries of the open projects, released with the build platform: the export of internal/open/meistercharts reads `open-projects`
+// from Maven Central. Only the build platform as root build inside the checkout includes them: the composite of the monorepo includes their
+// own builds, and the export, whose gradle.properties names buildplatformVersion, holds internal/buildplatform alone.
+if (gradle.parent == null && providers.gradleProperty("buildplatformVersion").isPresent.not()) {
+  include("meistercharts-projects")
+  project(":meistercharts-projects").projectDir = settingsDir.resolve("../open/meistercharts/project-registry/meistercharts-projects").canonicalFile
+  include("open-projects")
+  project(":open-projects").projectDir = settingsDir.resolve("../open/project-registry/open-projects").canonicalFile
+}

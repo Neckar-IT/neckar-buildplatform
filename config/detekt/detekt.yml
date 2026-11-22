@@ -658,6 +658,15 @@ neckar-rules:
     active: true
     excludes:
       - '**/build/generated/**'
+  GitLabApiValueDefault:
+    # A test builds its own gitlab4j models and reads them with any default.
+    active: true
+    excludes:
+      - '**/test/**'
+      - '**/*Test/**'
+      - '**/*Tests/**'
+      - '**/testFixtures/**'
+      - '**/build/generated/**'
   GitLabApiViaFactory:
     # A test builds a `GitLabApi` as a stub holder or against a server the test starts itself.
     active: true

@@ -43,4 +43,15 @@ class NodeToolchainLayoutTest {
     assertThat(NodeToolchainLayout.npmInstallPath).isEqualTo("node/npm")
     assertThat(NodeToolchainLayout.YarnInstallPath).isEqualTo("node/yarn")
   }
+
+  @Test
+  fun `clean of the owner keeps the Gradle home of CI with the node distribution`() {
+    assertThat(NodeToolchainLayout.cleanPaths(GradleProjectPath(":"))).isEqualTo(listOf("dist", "build", "node_modules", ".astro"))
+  }
+
+  @Test
+  fun `clean of a pnpm module deletes its own gradle directory`() {
+    assertThat(NodeToolchainLayout.cleanPaths(GradleProjectPath(":internal:patterns:admin-ui")))
+      .isEqualTo(listOf("dist", "build", "node_modules", ".astro", ".gradle"))
+  }
 }

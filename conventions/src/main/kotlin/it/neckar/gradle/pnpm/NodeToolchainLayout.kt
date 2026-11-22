@@ -43,8 +43,6 @@ object NodeToolchainLayout {
    * and `gitlab-ci.d/main.yml` list `.gradle/node-gradle` under `cache.paths`, and
    * `gitlab-ci.d/mr.yml` reports its size in `after_script`. Change this value and those three
    * places have to change with it, or every CI job silently misses the cache and re-downloads Node.
-   * Note that `clean` deletes it regardless of the prefix: `configurePnpmToolchain` wires the owner's
-   * `clean` to delete `.gradle` along with `build`.
    */
   const val NodeDistributionPath: String = ".gradle/node-gradle/nodejs"
 
@@ -68,4 +66,13 @@ object NodeToolchainLayout {
    * false for every other project, which consumes the root installation.
    */
   fun ownsInstallation(projectPath: GradleProjectPath): Boolean = projectPath == OwnerProjectPath
+
+  /**
+   * What `clean` of the pnpm project at [projectPath] deletes, relative to its project directory. The owner keeps `.gradle`:
+   * there CI points `GRADLE_USER_HOME` at it, and deleting it removed the build cache under running tasks.
+   */
+  fun cleanPaths(projectPath: GradleProjectPath): List<String> {
+    val buildOutputs = listOf("dist", "build", "node_modules", ".astro")
+    return if (ownsInstallation(projectPath)) buildOutputs else buildOutputs + ".gradle"
+  }
 }

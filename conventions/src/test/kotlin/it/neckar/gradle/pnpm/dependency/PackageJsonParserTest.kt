@@ -49,6 +49,21 @@ class PackageJsonParserTest {
   }
 
   @Test
+  fun `dependencyNames lists dependencies and devDependencies, not peerDependencies`() {
+    val packageJsonFile = createPackageJson("""
+      {
+        "dependencies": { "react": "catalog:" },
+        "devDependencies": { "astro": "catalog:", "@neckar-hub/oxfmt-config": "workspace:*" },
+        "peerDependencies": { "vite": "catalog:" }
+      }
+    """.trimIndent())
+
+    val dependencyNames = parser.parse(packageJsonFile).dependencyNames
+
+    assertThat(dependencyNames).containsExactlyInAnyOrder(NpmPackageName("react"), NpmPackageName("astro"), NpmPackageName("@neckar-hub/oxfmt-config"))
+  }
+
+  @Test
   fun `workspaceDependencies extracts from dependencies section`() {
     val packageJsonFile = createPackageJson("""
       {

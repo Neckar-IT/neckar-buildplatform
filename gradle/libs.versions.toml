@@ -26,7 +26,7 @@ com-javagen-schema-gen = { id = "com.javagen.schema-gen", version = "0.9.1" }
 
 ca-cutterslade-analyze = { id = "ca.cutterslade.analyze", version = "2.0.0" }
 
-com-autonomousapps-dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version = "3.20.3" }
+com-autonomousapps-dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version = "3.20.4" }
 
 de-undercouch-download = { id = "de.undercouch.download", version.ref = "de-undercouch-download" }
 
@@ -59,7 +59,7 @@ com-gitlab-cromefire-detekt-gitlab-report = "0.5.0"
 # 2.3.13 loses library symbols when KSP tasks run concurrently in one daemon and caches the empty output; renovate.json skips it.
 com-google-devtools-ksp = "2.3.12"
 
-org-mongodb = "5.14.0"
+org-mongodb = "5.15.0"
 
 # json-schema-validator: Kotlin Multiplatform JSON Schema validator (draft 7, 2019-09, 2020-12)
 # that validates kotlinx.serialization JsonElement directly.
@@ -67,7 +67,7 @@ io-github-optimumcode-json-schema = "0.5.5"
 
 testcontainers = "2.0.5"
 
-aws-sdk-kotlin = "1.9.37"
+aws-sdk-kotlin = "1.9.38"
 
 apache-poi = "6.0.0"
 
@@ -142,14 +142,14 @@ opentelemetry = "1.68.0"
 # Alpha channel of the same release train, one -alpha release per core release. Governs opentelemetry-api-incubator.
 opentelemetry-alpha = "1.68.0-alpha"
 
-opentelemetry-instrumentation = "2.33.1-alpha"
+opentelemetry-instrumentation = "2.34.0-alpha"
 
-opentelemetry-javaagent = "2.33.1"
+opentelemetry-javaagent = "2.34.0"
 
 # Own release train, versioned independently of the SDK and of the instrumentation artifacts. No BOM pins the stable channel.
 opentelemetry-semconv = "1.45.0"
 
-micrometer = "1.17.2"
+micrometer = "1.18.0"
 
 caffeine = "3.3.1"
 
@@ -167,11 +167,11 @@ gitlab4j = "6.3.0"
 
 testfx = "4.0.18"
 
-clikt = "5.1.0"
+clikt = "5.2.1"
 
-javafx = "25.0.5"
+javafx = "25.0.5.1"
 
-netty = "4.2.20.Final"
+netty = "4.2.21.Final"
 
 rxkotlin = "2.4.0"
 
@@ -209,7 +209,7 @@ jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-datab
 
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "org-slf4j" }
 
-logback-classic = "ch.qos.logback:logback-classic:1.6.7"
+logback-classic = "ch.qos.logback:logback-classic:1.6.8"
 logstash-logback-encoder = "net.logstash.logback:logstash-logback-encoder:9.0"
 
 kotlin-build-tools-compat = { group = "org.jetbrains.kotlin", name = "kotlin-build-tools-compat", version.ref = "kotlin" }
@@ -313,7 +313,7 @@ mongodb-driver-core = { group = "org.mongodb", name = "mongodb-driver-core", ver
 
 flowext = "io.github.hoc081098:FlowExt:1.0.0"
 
-software-amazon-awssdk-s3 = "software.amazon.awssdk:s3:2.59.1"
+software-amazon-awssdk-s3 = "software.amazon.awssdk:s3:2.59.4"
 
 # The maintained fork of kaml, same packages com.charleskorn.kaml; kaml itself is archived.
 kotaml = "io.heapy.kotaml:kotaml:0.113.0"
@@ -337,7 +337,7 @@ loki-logback-appender = "com.github.loki4j:loki-logback-appender:2.1.0"
 
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
-playwright = "com.microsoft.playwright:playwright:1.65.0"
+playwright = "com.microsoft.playwright:playwright:1.65.1"
 
 kotlin-wrappers-bom = { group = "org.jetbrains.kotlin-wrappers", name = "kotlin-wrappers-bom", version.ref = "org-jetbrains-kotlin-wrappers" }
 
@@ -411,7 +411,7 @@ fontawesomefx = "de.jensd:fontawesomefx:8.9"
 webjars-font-awesome = "org.webjars:font-awesome:7.3.0"
 webp-imageio = "com.github.usefulness:webp-imageio:0.11.0"
 
-controlsfx = "org.controlsfx:controlsfx:11.2.6"
+controlsfx = "org.controlsfx:controlsfx:11.2.7"
 
 tilesfx = "eu.hansolo:tilesfx:21.0.9"
 

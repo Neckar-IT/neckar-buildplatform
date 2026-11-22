@@ -11,11 +11,11 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.register
 
 /**
- * The `openapiSpec` task path of this project — for consumer modules whose build depends on the
- * generated OpenAPI spec (Orval type generation, pnpm frontend builds):
+ * The `openapiSpec` task path of this project, for a consumer that reads a spec beyond its one Orval backend, which
+ * `orvalConvert` wires itself:
  *
  * ```
- * dependsOn(huddleService.openapiSpecTask) // huddleService: the registry entry of the backend
+ * dependsOn(Projects.open.customer.openapiSpecTask) // a spec of the set merged by typescript-utils
  * ```
  *
  * Lives next to [OpenApiGenerationConfigPlugin], which registers the task — the task name is

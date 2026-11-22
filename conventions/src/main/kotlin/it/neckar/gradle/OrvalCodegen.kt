@@ -6,7 +6,7 @@ import org.gradle.api.tasks.PathSensitivity
 /**
  * Declares the OpenAPI specs of [backendModulePaths] as input and `build/generated/open-api` as output of the Orval run inside this
  * task, so a backend API change, a `clean` or a cache hit regenerates the TypeScript types. The `dependsOn` on each `openapiSpec`
- * stays in the consuming build script.
+ * stays with the caller: `OrvalConvertPlugin` for a module with one backend, the build script of a module merging several specs.
  */
 fun Task.declaresOrvalCodegen(vararg backendModulePaths: String) {
   require(backendModulePaths.isNotEmpty()) {

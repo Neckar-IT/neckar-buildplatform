@@ -1,7 +1,9 @@
 package it.neckar.gradle
 
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 /**
  * Returns true if the opt-in `wasmJs` target is enabled for this build: `-PwasmJs=true`
@@ -70,6 +72,10 @@ fun KotlinMultiplatformExtension.configureWasmJsTarget(
     if (executable) {
       binaries.executable()
     }
+  }
+  // Without `--host` webpack-dev-server listens on every interface. By task name: a `browser { }` block here would add the browser target.
+  project.tasks.withType<KotlinWebpack>().matching { it.name.startsWith("wasmJsBrowser") && it.name.endsWith("Run") }.configureEach {
+    args.addAll(listOf("--host", LoopbackDevServerHost))
   }
 
   if (wasmJsMainDependencies != null) {

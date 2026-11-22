@@ -68,6 +68,14 @@ class ParsedPackageJson internal constructor(private val source: File, jsonObjec
     devDependencies = jsonObject.workspaceDependenciesOf(source, "devDependencies"),
   )
 
+  /** Every package of `dependencies` and `devDependencies`, whatever its version specifier. */
+  val dependencyNames: Set<NpmPackageName> by lazy {
+    // Lazy: every configuration parses the manifests, only verifyAstroTypecheck asks this.
+    listOf("dependencies", "devDependencies").flatMap { section ->
+      jsonObject[section]?.asObject(source, "'$section'")?.keys.orEmpty().map { NpmPackageName(it) }
+    }.toSet()
+  }
+
   /**
    * Every dependency whose version is written into the manifest itself, as `section name=version`.
    * `catalog:` and `workspace:` name no version, `link:`, `file:` and `portal:` point at a local path.
