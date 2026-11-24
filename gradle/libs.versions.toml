@@ -8,7 +8,7 @@ org-jetbrains-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform"
 
 org-jetbrains-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
-com-diffplug-spotless = { id = "com.diffplug.spotless", version = "8.11.0" }
+com-diffplug-spotless = { id = "com.diffplug.spotless", version = "8.12.0" }
 
 # Applied by build-logic alone, which checks its Serializable classes; every other module gets Detekt through build-logic/core.
 dev-detekt = { id = "dev.detekt", version.ref = "dev-detekt" }
@@ -67,11 +67,11 @@ io-github-optimumcode-json-schema = "0.5.5"
 
 testcontainers = "2.0.5"
 
-aws-sdk-kotlin = "1.9.38"
+aws-sdk-kotlin = "1.9.43"
 
 apache-poi = "6.0.0"
 
-org-commonmark = "0.32.0"
+org-commonmark = "0.33.0"
 
 # BouncyCastle publishes one build per JDK baseline. This repository builds on Java 25, so only the
 # jdk18on line (Java 8 and up) is used - never the jdk15to18 line (Java 5 to 8) or the jdk14 line.
@@ -313,7 +313,7 @@ mongodb-driver-core = { group = "org.mongodb", name = "mongodb-driver-core", ver
 
 flowext = "io.github.hoc081098:FlowExt:1.0.0"
 
-software-amazon-awssdk-s3 = "software.amazon.awssdk:s3:2.59.4"
+software-amazon-awssdk-s3 = "software.amazon.awssdk:s3:2.59.7"
 
 # The maintained fork of kaml, same packages com.charleskorn.kaml; kaml itself is archived.
 kotaml = "io.heapy.kotaml:kotaml:0.113.0"

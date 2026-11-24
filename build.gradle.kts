@@ -61,6 +61,13 @@ subprojects {
   // Every project publishes signed to Maven Central; the plugin picks the publication from the project's plugins
   // (version catalog, Kotlin JVM library, Gradle plugin with its markers).
   apply(plugin = "com.vanniktech.maven.publish")
+
+  // The release verification publishes to a local repository what publishToMavenCentral uploads: this task name exists in no other project.
+  tasks.register("publishMavenCentralPublicationsToMavenLocal") {
+    group = PublishingPlugin.PUBLISH_TASK_GROUP
+    description = "Publishes the Maven Central publications of this project to the local Maven repository"
+    dependsOn(tasks.named(MavenPublishPlugin.PUBLISH_LOCAL_LIFECYCLE_TASK_NAME))
+  }
   extensions.configure<MavenPublishBaseExtension>("mavenPublishing") {
     publishToMavenCentral()
     signAllPublications()
