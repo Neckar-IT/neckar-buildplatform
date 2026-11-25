@@ -3,18 +3,19 @@ package it.neckar.gradle
 import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 import kotlinx.kover.gradle.plugin.dsl.tasks.KoverReport
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
 
 /** Gradle property that attaches the Kover agent to the test JVMs: `-Pcoverage=true`. */
-private const val CoverageGradleProperty: String = "coverage"
+const val CoverageGradleProperty: String = "coverage"
 
 /**
  * Attaches the Kover agent, which doubles the cold start of a test JVM, only with `-Pcoverage=true`;
  * a Kover report without the property fails instead of writing an empty report.
  */
 fun Project.configureCoverage() {
-  val coverageEnabled = providers.gradleProperty(CoverageGradleProperty).map { it != "false" }.orElse(false)
+  val coverageEnabled = coverageEnabled()
   extensions.getByType<KoverProjectExtension>().run {
     detachCoverageFromCheck()
     currentProject.instrumentation.disabledForAll.set(coverageEnabled.map { it.not() })
@@ -42,3 +43,5 @@ private fun KoverProjectExtension.detachCoverageFromCheck() {
   }
 }
 
+/** Whether the build runs with [CoverageGradleProperty]; any value except `false` enables it. */
+fun Project.coverageEnabled(): Provider<Boolean> = providers.gradleProperty(CoverageGradleProperty).map { it != "false" }.orElse(false)

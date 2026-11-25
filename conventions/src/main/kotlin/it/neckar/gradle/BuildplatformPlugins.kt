@@ -80,6 +80,9 @@ object BuildplatformPlugins {
   /** See [it.neckar.gradle.NeckarBasePlugin]. */
   const val NeckarBase: String = "it.neckar.base"
 
+  /** Registers `verifyMavenCentralPublishing` for the subprojects published to Maven Central; see [it.neckar.gradle.publishing.MavenCentralPublishingPlugin]. */
+  const val MavenCentralPublishing: String = "it.neckar.maven-central-publishing"
+
   const val Download: String = "de.undercouch.download"
 
   /**

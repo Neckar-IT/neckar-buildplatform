@@ -67,7 +67,7 @@ fun Project.registerIntegrationTestSuite(name: String, configure: JvmTestSuite.(
     })
   }
 
-  // Disable Kover instrumentation for this suite — otherwise an explicit koverHtmlReport (the scheduled
-  // reports pipeline) would instrument and run the integration-test suite as part of coverage collection.
+  // Disable Kover instrumentation for this suite — otherwise an explicit koverHtmlReport (the job
+  // `⏲ verify main nightly`) would instrument and run the integration-test suite as part of coverage collection.
   extensions.getByType<KoverProjectExtension>().currentProject.instrumentation.disabledForTestTasks.add(name)
 }

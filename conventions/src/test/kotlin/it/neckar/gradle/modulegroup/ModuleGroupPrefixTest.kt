@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class ModuleGroupPrefixTest {
   @Test
   fun `a plain directory name is the prefix`() {
-    assertThat(ModuleGroupPrefix.fromDirectoryName("elektromeister")).isEqualTo(ModuleGroupPrefix("elektromeister"))
+    assertThat(ModuleGroupPrefix.fromDirectoryName("turboangebot")).isEqualTo(ModuleGroupPrefix("turboangebot"))
   }
 
   @Test

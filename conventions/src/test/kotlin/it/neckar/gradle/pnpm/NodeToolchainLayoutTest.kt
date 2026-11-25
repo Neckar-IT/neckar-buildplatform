@@ -18,7 +18,7 @@ class NodeToolchainLayoutTest {
   fun `every other project consumes the root installation instead of creating its own`() {
     assertThat(NodeToolchainLayout.ownsInstallation(GradleProjectPath(":internal:patterns:admin-ui"))).isFalse()
     assertThat(NodeToolchainLayout.ownsInstallation(GradleProjectPath(":internal:open:commons:typescript:typescript-react-ui"))).isFalse()
-    assertThat(NodeToolchainLayout.ownsInstallation(GradleProjectPath(":internal:closed:elektromeister:elektromeister-ui"))).isFalse()
+    assertThat(NodeToolchainLayout.ownsInstallation(GradleProjectPath(":internal:closed:turboangebot.de:turboangebot-ui"))).isFalse()
   }
 
   /**

@@ -20,13 +20,13 @@ class ModuleGroupPluginTest {
 
   @Test
   fun `a module carrying the prefix passes`() {
-    assertThat(moduleGroupProblems(GradleProjectPath(":internal:closed:elektromeister"), ModuleGroupPrefix("elektromeister"), listOf("elektromeister-service", "elektromeister-ui"))).isEmpty()
+    assertThat(moduleGroupProblems(GradleProjectPath(":internal:closed:turboangebot.de"), ModuleGroupPrefix("turboangebot"), listOf("turboangebot-service", "turboangebot-ui"))).isEmpty()
   }
 
   @Test
   fun `a module without the prefix fails`() {
-    assertThat(moduleGroupProblems(GradleProjectPath(":internal:closed:elektromeister"), ModuleGroupPrefix("elektromeister"), listOf("elektromeister-service", "pdf-layout")).map { it.substringBefore(" lacks") })
-      .containsExactly(":internal:closed:elektromeister:pdf-layout")
+    assertThat(moduleGroupProblems(GradleProjectPath(":internal:closed:turboangebot.de"), ModuleGroupPrefix("turboangebot"), listOf("turboangebot-service", "pdf-layout")).map { it.substringBefore(" lacks") })
+      .containsExactly(":internal:closed:turboangebot.de:pdf-layout")
   }
 
   /** The service rule of `internal/closed/CLAUDE.md` names a deployed module after its domain. */
@@ -52,7 +52,7 @@ class ModuleGroupPluginTest {
 
   @Test
   fun `check depends on verifyModuleGroup`() {
-    val group = groupProject("elektromeister", "elektromeister-service")
+    val group = groupProject("turboangebot", "turboangebot-service")
     val check = group.tasks.getByName(CheckTaskName)
 
     assertThat(check.taskDependencies.getDependencies(check).map { it.name }.filter { it == ModuleGroupPlugin.VerifyTaskName }).containsExactly(ModuleGroupPlugin.VerifyTaskName)

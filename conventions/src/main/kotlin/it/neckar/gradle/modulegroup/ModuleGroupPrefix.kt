@@ -1,8 +1,8 @@
 package it.neckar.gradle.modulegroup
 
 /**
- * The prefix every direct module of a module group carries before a `-`, e.g. `elektromeister` for
- * `internal/closed/elektromeister/elektromeister-service`.
+ * The prefix every direct module of a module group carries before a `-`, e.g. `turboangebot` for
+ * `internal/closed/turboangebot.de/turboangebot-service`.
  */
 @JvmInline
 value class ModuleGroupPrefix(val value: String) {

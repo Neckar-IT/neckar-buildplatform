@@ -123,6 +123,10 @@ gradlePlugin {
       id = "it.neckar.base"
       implementationClass = "it.neckar.gradle.NeckarBasePlugin"
     }
+    register("MavenCentralPublishingPlugin") {
+      id = "it.neckar.maven-central-publishing"
+      implementationClass = "it.neckar.gradle.publishing.MavenCentralPublishingPlugin"
+    }
     register("FatJarMetadataPlugin") {
       id = "it.neckar.shadow.fat-jar-metadata"
       implementationClass = "it.neckar.gradle.shadow.FatJarMetadataPlugin"

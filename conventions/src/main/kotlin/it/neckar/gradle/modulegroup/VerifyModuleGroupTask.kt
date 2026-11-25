@@ -18,7 +18,7 @@ import org.gradle.api.tasks.TaskAction
 @CacheableTask
 abstract class VerifyModuleGroupTask : DefaultTask() {
   /**
-   * The Gradle path of the group, e.g. `:internal:closed:elektromeister`.
+   * The Gradle path of the group, e.g. `:internal:closed:turboangebot.de`.
    */
   @get:Input
   abstract val groupPath: Property<String>

@@ -1,5 +1,6 @@
 // The Kotlin projects are compiled with Gradle's embedded Kotlin, like build-logic/ of the monorepo, which depends on them.
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import it.neckar.gradle.publishing.MavenCentralPublishingPlugin
 
 plugins {
   kotlin("plugin.serialization") version embeddedKotlinVersion apply false
@@ -26,6 +27,9 @@ val openRegistries: List<OpenRegistry> = listOf(
   OpenRegistry("meistercharts-projects", "it.neckar.open.meistercharts.project-registry", apacheLicensed = true),
   OpenRegistry("open-projects", "it.neckar.open.project-registry", apacheLicensed = false),
 )
+
+// verifyMavenCentralPublishing: every project below publishes to Maven Central. The plugin class comes from buildSrc.
+apply<MavenCentralPublishingPlugin>()
 
 subprojects {
   val openRegistry: OpenRegistry? = openRegistries.firstOrNull { it.name == name }
@@ -62,12 +66,6 @@ subprojects {
   // (version catalog, Kotlin JVM library, Gradle plugin with its markers).
   apply(plugin = "com.vanniktech.maven.publish")
 
-  // The release verification publishes to a local repository what publishToMavenCentral uploads: this task name exists in no other project.
-  tasks.register("publishMavenCentralPublicationsToMavenLocal") {
-    group = PublishingPlugin.PUBLISH_TASK_GROUP
-    description = "Publishes the Maven Central publications of this project to the local Maven repository"
-    dependsOn(tasks.named(MavenPublishPlugin.PUBLISH_LOCAL_LIFECYCLE_TASK_NAME))
-  }
   extensions.configure<MavenPublishBaseExtension>("mavenPublishing") {
     publishToMavenCentral()
     signAllPublications()
